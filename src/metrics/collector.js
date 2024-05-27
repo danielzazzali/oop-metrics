@@ -4,7 +4,8 @@ const { getAllJsFiles } = require('../utils/fileUtils');
 const { analyzeFile } = require('./analyzer');
 
 const collectMetrics = (dirPath) => {
-    const result = {};
+    const metrics = {};
+    const projectMetrics = {};
     const jsFiles = getAllJsFiles(dirPath);
 
     jsFiles.forEach(filePath => {
@@ -12,7 +13,7 @@ const collectMetrics = (dirPath) => {
         const fileContent = fs.readFileSync(filePath, 'utf-8');
         const directoryPathParts = path.dirname(relativePath).split(path.sep);
 
-        let currentDirectory = result;
+        let currentDirectory = metrics;
         for (const part of directoryPathParts) {
             if (!currentDirectory[part]) {
                 currentDirectory[part] = {};
@@ -23,25 +24,25 @@ const collectMetrics = (dirPath) => {
         currentDirectory[path.basename(filePath)] = analyzeFile(fileContent);
     });
 
-    const sumMetrics = (obj) => {
-        return Object.entries(obj).reduce((acc, [key, value]) => {
-            if (key.endsWith('.js')) {
-                for (const metric in value) {
-                    acc[metric] = (acc[metric] || 0) + value[metric];
-                }
-            } else if (typeof value === 'object') {
-                const nestedMetrics = sumMetrics(value);
-                for (const metric in nestedMetrics) {
-                    acc[metric] = (acc[metric] || 0) + nestedMetrics[metric];
-                }
+    projectMetrics['Project total metrics'] = sumMetrics(metrics);
+
+    return [ metrics, projectMetrics ];
+};
+
+const sumMetrics = (obj) => {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+        if (key.endsWith('.js')) {
+            for (const metric in value) {
+                acc[metric] = (acc[metric] || 0) + value[metric];
             }
-            return acc;
-        }, {});
-    };
-
-    result['Project total metrics'] = sumMetrics(result);
-
-    return result;
+        } else if (typeof value === 'object') {
+            const nestedMetrics = sumMetrics(value);
+            for (const metric in nestedMetrics) {
+                acc[metric] = (acc[metric] || 0) + nestedMetrics[metric];
+            }
+        }
+        return acc;
+    }, {});
 };
 
 module.exports = {

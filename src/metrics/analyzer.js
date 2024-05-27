@@ -13,7 +13,15 @@ const countLinesOfCode = (fileContent, node) => {
 
 const analyzeFile = (fileContent) => {
     const visitor = new Visitor();
-    const ast = esprima.parseScript(fileContent, { loc: true });
+
+    const lines = fileContent.split('\n');
+    if (lines[0].includes('#!')) {
+        lines.shift();
+    }
+    const modifiedFileContent = lines.join('\n');
+
+
+    const ast = esprima.parseScript(modifiedFileContent, { loc: true });
 
     visitor.metrics.linesOfCode = countLinesOfCode(fileContent, ast);
 
