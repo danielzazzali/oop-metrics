@@ -5,7 +5,7 @@ class ClassDeclarationVisitor {
 
     visit(node) {
         if (node.type === 'ClassDeclaration') {
-            this.metrics.classes += 1;
+            this.metrics.classes = (this.metrics.classes || 0) + 1;
         }
     }
 }

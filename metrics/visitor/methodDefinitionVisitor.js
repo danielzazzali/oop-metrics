@@ -5,7 +5,7 @@ class MethodDefinitionVisitor {
 
     visit(node) {
         if (node.type === 'MethodDefinition') {
-            this.metrics.methods += 1;
+            this.metrics.methods = (this.metrics.methods || 0) + 1;
         }
     }
 }
