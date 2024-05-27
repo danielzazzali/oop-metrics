@@ -5,30 +5,19 @@ const { analyzeFile } = require('./analyzer');
 
 const collectMetrics = (dirPath) => {
     const result = {};
+    const jsFiles = getAllJsFiles(dirPath);
 
-    const processDirectory = (currentDirPath) => {
-        const files = fs.readdirSync(currentDirPath);
+    jsFiles.forEach(filePath => {
+        const relativePath = path.relative(dirPath, filePath);
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const directoryPath = path.dirname(relativePath);
+        if (!result[directoryPath]) {
+            result[directoryPath] = {};
+        }
+        result[directoryPath][path.basename(filePath)] = analyzeFile(fileContent);
+    });
 
-        files.forEach(file => {
-            const filePath = path.join(currentDirPath, file);
-            const relativePath = path.relative(dirPath, filePath);
-            const stats = fs.statSync(filePath);
-
-            if (stats.isDirectory()) {
-                processDirectory(filePath);
-                return;
-            }
-
-            if (path.extname(file) === '.js') {
-                const fileContent = fs.readFileSync(filePath, 'utf-8');
-                result[relativePath] = {file: relativePath, metrics: analyzeFile(fileContent)};
-            }
-        });
-    };
-
-    processDirectory(dirPath);
-
-    result['Project total metrics'] = Object.values(result).reduce((acc, {metrics}) => {
+    result['Project total metrics'] = Object.values(result).flatMap(Object.values).reduce((acc, metrics) => {
         for (const key in metrics) {
             acc[key] = (acc[key] || 0) + metrics[key];
         }
