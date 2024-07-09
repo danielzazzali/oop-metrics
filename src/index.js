@@ -1,16 +1,36 @@
 #!/usr/bin/env node
 
-const { collectMetrics } = require('./metrics/collector');
+const fs = require('fs');
+const Visitor = require('./metrics/visitor/Visitor');
+const esprima = require('esprima');
+const MetricsStore = require('./metrics/store/MetricsStore');
+const { getAllJsFiles, prettyPrint } = require('./utils/utils');
+const { countConsoleLog } = require('./metrics/metrics');
 
-const dirPath = process.cwd();
-const [ metricsReport, projectMetricsReport ] = collectMetrics(dirPath);
 
-printLine();
-console.log(JSON.stringify(metricsReport, null, 2));
-printLine();
-console.log(JSON.stringify(projectMetricsReport, null, 2));
-printLine();
+const files = getAllJsFiles();
+const asts = [];
 
-function printLine() {
-    console.log('-'.repeat(80));
-}
+files.forEach(file => {
+    let code = fs.readFileSync(file.filePath, 'utf8');
+
+    if (code.startsWith('#!')) {
+        code = code.split('\n').slice(1).join('\n');
+    }
+
+    const ast = esprima.parseScript(code);
+    asts.push({
+        ast: ast,
+        fileName: file.fileName
+    });
+    // prettyPrint(ast);
+});
+
+const countConsoleLogVisitor = new Visitor(countConsoleLog);
+
+asts.forEach(astObject => {
+    countConsoleLogVisitor.visit(astObject.ast, astObject.fileName);
+});
+
+prettyPrint(MetricsStore.getMetrics());
+

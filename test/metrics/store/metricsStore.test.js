@@ -1,4 +1,4 @@
-const metricsStore = require('../../../src/metrics/store/metricsStore');
+const metricsStore = require('../../../src/metrics/store/MetricsStore');
 
 describe('MetricsStore', () => {
     beforeEach(() => {
