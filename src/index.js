@@ -6,7 +6,7 @@ const esprima = require('esprima');
 const MetricsStore = require('./metrics/store/MetricsStore');
 const { getAllJsFiles, prettyPrint } = require('./utils/utils');
 const { countConsoleLog } = require('./metrics/metrics');
-
+const { isConsoleLog } = require('./metrics/predicates/predicates');
 
 const files = getAllJsFiles();
 const asts = [];
@@ -23,10 +23,9 @@ files.forEach(file => {
         ast: ast,
         fileName: file.fileName
     });
-    // prettyPrint(ast);
 });
 
-const countConsoleLogVisitor = new Visitor(countConsoleLog);
+const countConsoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
 
 asts.forEach(astObject => {
     countConsoleLogVisitor.visit(astObject.ast, astObject.fileName);

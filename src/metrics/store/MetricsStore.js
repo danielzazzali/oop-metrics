@@ -8,16 +8,22 @@ class MetricsStore {
         return MetricsStore.instance;
     }
 
-    increment(metric, object, quantity = 1) {
-        if (!this.metrics[object]) {
-            this.metrics[object] = {};
+    increment(fileName, metricData) {
+        const { metric, objectName = 'global', methodName = 'global', quantity = 1 } = metricData;
+
+        if (!this.metrics[fileName]) {
+            this.metrics[fileName] = [];
         }
 
-        if (!this.metrics[object][metric]) {
-            this.metrics[object][metric] = 0;
-        }
+        const existingMetric = this.metrics[fileName].find(m =>
+            m.objectName === objectName && m.methodName === methodName && m.metric === metric
+        );
 
-        this.metrics[object][metric] += quantity;
+        if (existingMetric) {
+            existingMetric.count += quantity;
+        } else {
+            this.metrics[fileName].push({ metric, objectName, methodName, count: quantity });
+        }
     }
 
     getMetrics() {

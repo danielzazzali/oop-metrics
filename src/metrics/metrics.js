@@ -1,13 +1,16 @@
 const MetricsStore = require('./store/MetricsStore');
-const { prettyPrint } = require('../utils/utils');
 
-function countConsoleLog(node, fileName) {
-    if (node.type === 'CallExpression' &&
-        node.callee.type === 'MemberExpression' &&
-        node.callee.object.name === 'console' &&
-        node.callee.property.name === 'log') {
-        MetricsStore.increment('consoleLogCount', fileName);
-        MetricsStore.increment('consoleLogCount', 'global');
+
+function countConsoleLog(node, fileName, predicate) {
+    if (predicate(node)) {
+        const objectName = node.callee.object ? node.callee.object.name : 'global';
+        const methodName = node.callee.property ? node.callee.property.name : 'global';
+
+        MetricsStore.increment(fileName, {
+            metric: 'consoleLogCount',
+            objectName,
+            methodName
+        });
     }
 }
 
