@@ -8,12 +8,7 @@ const isConsoleLog = generatePredicate({
     'callee.property.name': 'log'
 });
 
-const isMyClassDeclaration = generatePredicate({
-    'type': 'ClassDeclaration',
-    'id.name': 'MyClass'
-});
 
 module.exports = {
     isConsoleLog,
-    isMyClassDeclaration
 };

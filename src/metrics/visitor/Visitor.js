@@ -1,3 +1,5 @@
+const estraverse = require('estraverse');
+
 class Visitor {
     constructor(action, predicate) {
         this.action = action;
@@ -5,17 +7,11 @@ class Visitor {
     }
 
     visit(node, fileName) {
-        this._visitNode(node, fileName);
-    }
-
-    _visitNode(node, fileName) {
-        this.action(node, fileName, this.predicate);
-
-        for (let key in node) {
-            if (node[key] && typeof node[key] === 'object') {
-                this.visit(node[key], fileName);
+        estraverse.traverse(node, {
+            enter: (node) => {
+                this.action(node, fileName, this.predicate);
             }
-        }
+        });
     }
 }
 

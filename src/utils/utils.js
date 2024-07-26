@@ -60,4 +60,5 @@ const getAllJsFiles = () => {
 module.exports = {
     getAllJsFiles,
     prettyPrint,
+    getRootPath,
 };
