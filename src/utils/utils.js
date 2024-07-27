@@ -13,20 +13,20 @@ function prettyPrint(object) {
     printLine();
 }
 
-const getRootPath = () => {
+function getRootPath() {
     return process.cwd();
-};
+}
 
-const getIgnoreFiles = (rootPath) => {
+function getIgnoreFiles(rootPath) {
     const ignorePath = path.join(rootPath, '.metricsignore');
     let ignoreFiles = [];
     if (fs.existsSync(ignorePath)) {
         ignoreFiles = fs.readFileSync(ignorePath, 'utf8').split('\n').map(line => path.join(rootPath, line));
     }
     return ignoreFiles;
-};
+}
 
-const readDirectory = (directory, ignoreFiles, arrayOfFiles) => {
+function readDirectory(directory, ignoreFiles, arrayOfFiles) {
     const files = fs.readdirSync(directory);
 
     for (const file of files) {
@@ -45,9 +45,9 @@ const readDirectory = (directory, ignoreFiles, arrayOfFiles) => {
             });
         }
     }
-};
+}
 
-const getAllJsFiles = () => {
+function getAllJsFiles() {
     let arrayOfFiles = [];
     const rootPath = getRootPath();
     const ignoreFiles = getIgnoreFiles(rootPath);
@@ -55,10 +55,24 @@ const getAllJsFiles = () => {
     readDirectory(rootPath, ignoreFiles, arrayOfFiles);
 
     return arrayOfFiles;
-};
+}
+
+function getFunctionName(node) {
+    if (node.type === 'FunctionDeclaration' && node.id) {
+        return node.id.name;
+    }
+    if (node.type === 'FunctionExpression' && node.id) {
+        return node.id.name;
+    }
+    if (node.type === 'MethodDefinition' && node.key) {
+        return node.key.name;
+    }
+    return null;
+}
 
 module.exports = {
     getAllJsFiles,
     prettyPrint,
     getRootPath,
+    getFunctionName
 };

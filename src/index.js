@@ -6,8 +6,8 @@ const dependencyTree = require('dependency-tree');
 const Visitor = require('./metrics/visitor/Visitor');
 const MetricsStore = require('./metrics/store/MetricsStore');
 const { getAllJsFiles, prettyPrint, getRootPath } = require('./utils/utils');
-const { countConsoleLog } = require('./metrics/metrics');
-const { isConsoleLog } = require('./metrics/predicates/predicates');
+const { countConsoleLog, calculateProcedureFanOut} = require('./metrics/metrics');
+const { isConsoleLog, isProcedureNode} = require('./metrics/predicates/predicates');
 
 const files = getAllJsFiles();
 const abstractSyntaxTrees = [];
@@ -29,7 +29,7 @@ files.forEach(file => {
     const tree = dependencyTree.toList({
         filename: file.filePath,
         directory: getRootPath(),
-        filter: path => path.indexOf('node_modules') === -1
+        filter: path => path.indexOf('node_modules') === -1,
     });
     dependencyTrees.push({
         fileName: file.fileName,
@@ -37,10 +37,12 @@ files.forEach(file => {
     });
 });
 
-const countConsoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
+// const consoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
+const procedureFanOutVisitor = new Visitor(calculateProcedureFanOut, isProcedureNode);
 
 abstractSyntaxTrees.forEach(astObject => {
-    countConsoleLogVisitor.visit(astObject.ast, astObject.fileName);
+    // consoleLogVisitor.visit(astObject.ast, astObject.fileName);
+    procedureFanOutVisitor.visit(astObject.ast, astObject.fileName);
 });
 
 prettyPrint(MetricsStore.getMetrics());

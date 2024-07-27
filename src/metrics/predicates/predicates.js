@@ -8,7 +8,16 @@ const isConsoleLog = generatePredicate({
     'callee.property.name': 'log'
 });
 
+const isProcedureNode = generatePredicate({
+    'type': ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'MethodDefinition']
+});
+
+const isCallExpression = generatePredicate({
+    'type': 'CallExpression'
+});
 
 module.exports = {
     isConsoleLog,
+    isProcedureNode,
+    isCallExpression
 };

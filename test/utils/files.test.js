@@ -5,7 +5,6 @@ const fs = require('fs');
 
 describe('getAllJsFiles', () => {
     test('should return an array of .js files in the current directory and subdirectories', () => {
-        console.log(`Current working directory: ${process.cwd()}`);
         const jsFiles = getAllJsFiles();
 
         expect(Array.isArray(jsFiles)).toBe(true);

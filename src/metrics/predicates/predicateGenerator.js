@@ -18,7 +18,11 @@ function generatePredicate(criteria) {
                 if (value === undefined) return false; // If any part of the path is undefined, the criteria is not met
                 value = value[path[i]]; // Traverse the path in the node
             }
-            return value === criteria[key]; // Compare the value in the node to the expected value in the criteria
+            const expectedValue = criteria[key];
+            if (Array.isArray(expectedValue)) {
+                return expectedValue.includes(value); // Check if value is in the array of expected values
+            }
+            return value === expectedValue; // Compare the value in the node to the expected value in the criteria
         });
     };
 }

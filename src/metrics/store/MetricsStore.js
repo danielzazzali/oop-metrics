@@ -9,7 +9,7 @@ class MetricsStore {
     }
 
     increment(fileName, metricData) {
-        const { metric, objectName = 'global', methodName = 'global', quantity = 1 } = metricData;
+        const { metric, objectName, methodName, quantity = 1 } = metricData;
 
         if (!this.metrics[fileName]) {
             this.metrics[fileName] = [];
@@ -22,7 +22,10 @@ class MetricsStore {
         if (existingMetric) {
             existingMetric.count += quantity;
         } else {
-            this.metrics[fileName].push({ metric, objectName, methodName, count: quantity });
+            const newMetric = { metric, count: quantity };
+            if (objectName) newMetric.objectName = objectName;
+            if (methodName) newMetric.methodName = methodName;
+            this.metrics[fileName].push(newMetric);
         }
     }
 

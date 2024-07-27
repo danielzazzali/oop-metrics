@@ -1,5 +1,7 @@
+const estraverse = require('estraverse');
 const MetricsStore = require('./store/MetricsStore');
-
+const {isCallExpression} = require("./predicates/predicates");
+const {getFunctionName} = require("../utils/utils");
 
 function countConsoleLog(node, fileName, predicate) {
     if (predicate(node)) {
@@ -14,6 +16,26 @@ function countConsoleLog(node, fileName, predicate) {
     }
 }
 
+function calculateProcedureFanOut(node, fileName, predicate) {
+    if (predicate(node)) {
+        const functionName = getFunctionName(node) || 'anonymous';
+        const metricData = {
+            metric: 'ProcedureFanOut',
+            methodName: functionName
+        };
+
+        estraverse.traverse(node, {
+            enter: (innerNode) => {
+                if (isCallExpression(innerNode)) {
+                    MetricsStore.increment(fileName, metricData);
+                }
+            },
+            skipProperty: 'body'
+        });
+    }
+}
+
 module.exports = {
-    countConsoleLog
+    countConsoleLog,
+    calculateProcedureFanOut
 };
