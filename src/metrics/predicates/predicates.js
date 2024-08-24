@@ -16,8 +16,18 @@ const isCallExpression = generatePredicate({
     'type': 'CallExpression'
 });
 
+const isVariableDeclarator = generatePredicate({
+    'type': 'VariableDeclarator'
+});
+
+function isMethodCall(node) {
+    return node.type === 'CallExpression' && node.callee.type === 'MemberExpression';
+}
+
 module.exports = {
     isConsoleLog,
     isProcedureNode,
-    isCallExpression
+    isCallExpression,
+    isVariableDeclarator,
+    isMethodCall
 };

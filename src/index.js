@@ -6,8 +6,8 @@ const dependencyTree = require('dependency-tree');
 const Visitor = require('./metrics/visitor/Visitor');
 const MetricsStore = require('./metrics/store/MetricsStore');
 const { getAllJsFiles, prettyPrint, getRootPath } = require('./utils/utils');
-const { countConsoleLog, calculateProcedureFanOut} = require('./metrics/metrics');
-const { isConsoleLog, isProcedureNode} = require('./metrics/predicates/predicates');
+const { countConsoleLog, calculateProcedureFanOut, countImports, countMethodUsage} = require('./metrics/metrics');
+const { isConsoleLog, isProcedureNode, isVariableDeclarator, isMethodCall} = require('./metrics/predicates/predicates');
 
 const files = getAllJsFiles();
 const abstractSyntaxTrees = [];
@@ -37,12 +37,16 @@ files.forEach(file => {
     });
 });
 
-// const consoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
+const consoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
 const procedureFanOutVisitor = new Visitor(calculateProcedureFanOut, isProcedureNode);
+const importVisitor = new Visitor(countImports, isVariableDeclarator);
+const methodUsageVisitor = new Visitor(countMethodUsage, isMethodCall);
 
 abstractSyntaxTrees.forEach(astObject => {
     // consoleLogVisitor.visit(astObject.ast, astObject.fileName);
-    procedureFanOutVisitor.visit(astObject.ast, astObject.fileName);
+    // procedureFanOutVisitor.visit(astObject.ast, astObject.fileName);
+    importVisitor.visit(astObject.ast, astObject.fileName);
+    methodUsageVisitor.visit(astObject.ast, astObject.fileName);
 });
 
 prettyPrint(MetricsStore.getMetrics());

@@ -29,6 +29,52 @@ class MetricsStore {
         }
     }
 
+
+
+    incrementImports(fileName, objectName, importedObjectNames) {
+        if (!this.metrics[fileName]) {
+            this.metrics[fileName] = [];
+        }
+
+        let importMetric = this.metrics[fileName].find(m => m.metric === 'importCount');
+
+        if (importMetric) {
+            importMetric.count += 1;
+            if (!importMetric.importedObjects.some(obj => obj.objectName === objectName)) {
+                importMetric.importedObjects.push({ objectName, importedObjectNames });
+            }
+        } else {
+            this.metrics[fileName].push({
+                metric: 'importCount',
+                count: 1,
+                importedObjects: [{ objectName, importedObjectNames }]
+            });
+        }
+    }
+
+    incrementMethodUsage(fileName, objectName, methodName) {
+        if (!this.metrics[fileName]) {
+            this.metrics[fileName] = [];
+        }
+
+        let methodUsageMetric = this.metrics[fileName].find(m => m.metric === 'methodUsage');
+
+        if (methodUsageMetric) {
+            const existingMethod = methodUsageMetric.methods.find(m => m.objectName === objectName && m.methodName === methodName);
+            if (existingMethod) {
+                existingMethod.count += 1;
+            } else {
+                methodUsageMetric.methods.push({ objectName, methodName, count: 1 });
+            }
+        } else {
+            this.metrics[fileName].push({
+                metric: 'methodUsage',
+                methods: [{ objectName, methodName, count: 1 }]
+            });
+        }
+    }
+
+
     getMetrics() {
         return this.metrics;
     }

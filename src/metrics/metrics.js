@@ -35,7 +35,43 @@ function calculateProcedureFanOut(node, fileName, predicate) {
     }
 }
 
+function countImports(node, fileName, predicate) {
+    if (predicate(node)) {
+        const init = node.init;
+        const id = node.id;
+        if (init && init.type === 'CallExpression' && init.callee.name === 'require') {
+            const objectName = init.arguments[0].value;
+            let importedObjectNames = [];
+
+            if (id.type === 'Identifier') {
+                importedObjectNames.push(id.name);
+            } else if (id.type === 'ObjectPattern') {
+                importedObjectNames = id.properties.map(prop => prop.key.name);
+            }
+
+            MetricsStore.incrementImports(fileName, objectName, importedObjectNames);
+        }
+    }
+}
+
+function countMethodUsage(node, fileName, predicate) {
+    if (predicate(node)) {
+        const objectName = node.callee.object.name;
+        const methodName = node.callee.property.name;
+
+        const fileMetrics = MetricsStore.getMetrics()[fileName];
+        const importMetric = fileMetrics && fileMetrics.find(m => m.metric === 'importCount');
+        const importedObjects = importMetric ? importMetric.importedObjects.map(obj => obj.objectName) : [];
+
+        if (importedObjects.includes(objectName)) {
+            MetricsStore.incrementMethodUsage(fileName, objectName, methodName);
+        }
+    }
+}
+
 module.exports = {
     countConsoleLog,
-    calculateProcedureFanOut
+    calculateProcedureFanOut,
+    countImports,
+    countMethodUsage
 };
