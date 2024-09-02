@@ -47,11 +47,17 @@ function readDirectory(directory, ignoreFiles, arrayOfFiles) {
     }
 }
 
-function getAllJsFiles() {
+function getAllJsFiles(customRootPath) {
     let arrayOfFiles = [];
+
+    if (customRootPath) {
+        const ignoreFiles = getIgnoreFiles(customRootPath);
+        readDirectory(customRootPath, ignoreFiles, arrayOfFiles);
+        return arrayOfFiles;
+    }
+
     const rootPath = getRootPath();
     const ignoreFiles = getIgnoreFiles(rootPath);
-
     readDirectory(rootPath, ignoreFiles, arrayOfFiles);
 
     return arrayOfFiles;

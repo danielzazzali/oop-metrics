@@ -1,6 +1,6 @@
 {
   "name": "oop-metrics",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Tool to measure OOP metrics in JavaScript",
   "main": "src/index.js",
   "bin": {

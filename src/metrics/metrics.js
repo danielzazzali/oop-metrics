@@ -2,6 +2,7 @@ const estraverse = require('estraverse');
 const MetricsStore = require('./store/MetricsStore');
 const {isCallExpression} = require("./predicates/predicates");
 const {getFunctionName} = require("../utils/utils");
+const FanStore = require("./store/FanStore");
 
 function countConsoleLog(node, fileName, predicate) {
     if (predicate(node)) {
@@ -41,6 +42,11 @@ function countImports(node, fileName, predicate) {
         const id = node.id;
         if (init && init.type === 'CallExpression' && init.callee.name === 'require') {
             const objectName = init.arguments[0].value;
+
+            if (!objectName.startsWith('./') && !objectName.startsWith('../')) {
+                return;
+            }
+
             let importedObjectNames = [];
 
             if (id.type === 'Identifier') {
@@ -50,6 +56,8 @@ function countImports(node, fileName, predicate) {
             }
 
             MetricsStore.incrementImports(fileName, objectName, importedObjectNames);
+            FanStore.incrementFanOut(fileName, objectName, importedObjectNames);
+            FanStore.incrementFanIn(objectName, fileName);
         }
     }
 }
