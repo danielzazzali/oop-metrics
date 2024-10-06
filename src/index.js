@@ -11,59 +11,70 @@ const { countConsoleLog, calculateProcedureFanOut, countImports, countMethodUsag
 const { isConsoleLog, isProcedureNode, isVariableDeclarator, isMethodCall, isCallExpression} = require('./metrics/predicates/predicates');
 const {calculateFanMetrics} = require("./metrics/fanMetrics");
 
-const args = process.argv.slice(2);
-const customRootPath = args[0];
+function runMetrics(customRootPath) {
+    const files = getAllJsFiles(customRootPath);
+    const abstractSyntaxTrees = [];
+    const dependencyTrees = [];
 
-const files = getAllJsFiles(customRootPath);
-const abstractSyntaxTrees = [];
-const dependencyTrees = [];
+    files.forEach(file => {
+        let code = fs.readFileSync(file.filePath, 'utf8');
 
-files.forEach(file => {
-    let code = fs.readFileSync(file.filePath, 'utf8');
+        if (code.startsWith('#!')) {
+            code = code.split('\n').slice(1).join('\n');
+        }
 
-    if (code.startsWith('#!')) {
-        code = code.split('\n').slice(1).join('\n');
-    }
+        const ast = esprima.parseScript(code);
+        abstractSyntaxTrees.push({
+            fileName: file.fileName,
+            ast: ast
+        });
 
-    const ast = esprima.parseScript(code);
-    abstractSyntaxTrees.push({
-        fileName: file.fileName,
-        ast: ast
+        const tree = dependencyTree.toList({
+            filename: file.filePath,
+            directory: getRootPath(),
+            filter: path => path.indexOf('node_modules') === -1,
+        });
+        dependencyTrees.push({
+            fileName: file.fileName,
+            tree: tree
+        });
     });
 
-    const tree = dependencyTree.toList({
-        filename: file.filePath,
-        directory: getRootPath(),
-        filter: path => path.indexOf('node_modules') === -1,
+    const consoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
+    const procedureFanOutVisitor = new Visitor(calculateProcedureFanOut, isProcedureNode);
+    const importVisitor = new Visitor(countImports, isVariableDeclarator);
+    const methodUsageVisitor = new Visitor(countMethodUsage, isMethodCall);
+    const fanInFanOutVisitor = new Visitor(calculateFanMetrics, isCallExpression);
+
+    abstractSyntaxTrees.forEach(astObject => {
+        // consoleLogVisitor.visit(astObject.ast, astObject.fileName);
+        // procedureFanOutVisitor.visit(astObject.ast, astObject.fileName);
+        importVisitor.visit(astObject.ast, astObject.fileName);
+        //methodUsageVisitor.visit(astObject.ast, astObject.fileName);
+        fanInFanOutVisitor.visit(astObject.ast, astObject.fileName);
     });
-    dependencyTrees.push({
-        fileName: file.fileName,
-        tree: tree
-    });
-});
 
-const consoleLogVisitor = new Visitor(countConsoleLog, isConsoleLog);
-const procedureFanOutVisitor = new Visitor(calculateProcedureFanOut, isProcedureNode);
-const importVisitor = new Visitor(countImports, isVariableDeclarator);
-const methodUsageVisitor = new Visitor(countMethodUsage, isMethodCall);
-const fanInFanOutVisitor = new Visitor(calculateFanMetrics, isCallExpression);
+    //prettyPrint(MetricsStore.getMetrics());
 
-abstractSyntaxTrees.forEach(astObject => {
-    // consoleLogVisitor.visit(astObject.ast, astObject.fileName);
-    // procedureFanOutVisitor.visit(astObject.ast, astObject.fileName);
-    importVisitor.visit(astObject.ast, astObject.fileName);
-    //methodUsageVisitor.visit(astObject.ast, astObject.fileName);
-    fanInFanOutVisitor.visit(astObject.ast, astObject.fileName);
-});
+    const fanOutMetrics = FanStore.getFanOutMetrics();
+    const fanInMetrics = FanStore.getFanInMetrics();
 
-//prettyPrint(MetricsStore.getMetrics());
+    return {
+        fanOut: fanOutMetrics,
+        fanIn: fanInMetrics
+    };
+}
 
-console.log("\nFan Out:");
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    const customRootPath = args[0];
+    const result = runMetrics(customRootPath);
 
-prettyPrint(FanStore.getFanOutMetrics());
+    console.log("\nFan Out:");
+    prettyPrint(result.fanOut);
 
-console.log("\nFan In:");
-prettyPrint(FanStore.getFanInMetrics());
+    console.log("\nFan In:");
+    prettyPrint(result.fanIn);
+}
 
-
-
+module.exports = { runMetrics };
