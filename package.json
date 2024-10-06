@@ -1,10 +1,10 @@
 {
   "name": "oop-metrics",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "OOP Metrics Library",
   "main": "src/index.js",
   "bin": {
-    "oop-metrics": "./src/index.js"
+    "oop-metrics": "src/index.js"
   },
   "scripts": {
     "start": "node src/index.js"
